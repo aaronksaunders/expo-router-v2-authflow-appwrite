@@ -1,11 +1,7 @@
 import {
   Account,
   Client,
-  Databases,
-  Functions,
   ID,
-  Storage,
-  Teams,
 } from "appwrite";
 // import { useUserStore } from "./userStore";
 
