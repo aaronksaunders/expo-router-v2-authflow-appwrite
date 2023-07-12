@@ -18,7 +18,7 @@ interface AuthContextValue {
   signIn: (e: string, p: string) => Promise<SignInResponse>;
   signUp: (e: string, p: string, n: string) => Promise<SignInResponse>;
   signOut: () => Promise<SignOutResponse>;
-  user: User | null;
+  user: User | null | undefined;
   authInitialized: boolean;
 }
 
