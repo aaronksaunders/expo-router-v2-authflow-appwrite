@@ -1,11 +1,11 @@
 import { useRootNavigation, useRouter, useSegments } from "expo-router";
 import React, { useContext, useEffect, useState } from "react";
-import { appwrite } from "../lib/appwrite-service";
-import { Models } from "appwrite";
+import { supabase } from "../lib/supabase-service";
+import { Session, User } from "@supabase/supabase-js";
 
 // Define the AuthContextValue interface
 interface SignInResponse {
-  data: Models.User<Models.Preferences> | undefined;
+  data: User | undefined | null;
   error: Error | undefined;
 }
 
@@ -18,7 +18,7 @@ interface AuthContextValue {
   signIn: (e: string, p: string) => Promise<SignInResponse>;
   signUp: (e: string, p: string, n: string) => Promise<SignInResponse>;
   signOut: () => Promise<SignOutResponse>;
-  user: Models.User<Models.Preferences> | null;
+  user: User | null;
   authInitialized: boolean;
 }
 
@@ -33,12 +33,13 @@ const AuthContext = React.createContext<AuthContextValue | undefined>(
 );
 
 export function Provider(props: ProviderProps) {
-  const [user, setAuth] =
-    React.useState<Models.User<Models.Preferences> | null>(null);
+  const [user, setAuth] = React.useState<User | null | undefined>(null);
+  const [session, setSession] = useState<Session | null>(null);
+
   const [authInitialized, setAuthInitialized] = React.useState<boolean>(false);
 
   // This hook will protect the route access based on user authentication.
-  const useProtectedRoute = (user: Models.User<Models.Preferences> | null) => {
+  const useProtectedRoute = (user: User | null | undefined) => {
     const segments = useSegments();
     const router = useRouter();
 
@@ -82,17 +83,24 @@ export function Provider(props: ProviderProps) {
 
   useEffect(() => {
     (async () => {
-      try {
-        const user = await appwrite.account.get();
-        console.log(user);
-        setAuth(user);
-      } catch (error) {
-        console.log("error", error);
-        setAuth(null);
-      }
+      const { data, error } = await supabase.auth.getSession();
+      setSession(data.session);
+      setAuth(data.session?.user);
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          console.log(`Supabase auth event: ${event}`, session);
+          setSession(session);
+          setAuth(session?.user);
 
-      setAuthInitialized(true);
-      console.log("initialize ", user);
+          if (!authInitialized) {
+            setAuthInitialized(true);
+          }
+        }
+      );
+
+      return () => {
+        authListener!.subscription.unsubscribe();
+      };
     })();
   }, []);
 
@@ -102,8 +110,9 @@ export function Provider(props: ProviderProps) {
    */
   const logout = async (): Promise<SignOutResponse> => {
     try {
-      const response = await appwrite.account.deleteSession("current");
-      return { error: undefined, data: response };
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      return { error: undefined, data: true };
     } catch (error) {
       return { error, data: undefined };
     } finally {
@@ -122,26 +131,28 @@ export function Provider(props: ProviderProps) {
   ): Promise<SignInResponse> => {
     try {
       console.log(email, password);
-      const response = await appwrite.account.createEmailSession(
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
-      );
+        password,
+      });
+      if (error) throw error;
 
-      const user = await appwrite.account.get();
-      setAuth(user);
+      setAuth(data.user);
+      setSession(data.session);
       return { data: user, error: undefined };
     } catch (error) {
       setAuth(null);
+      setSession(null);
       return { error: error as Error, data: undefined };
     }
   };
 
   /**
-   * 
-   * @param email 
-   * @param password 
-   * @param username 
-   * @returns 
+   *
+   * @param email
+   * @param password
+   * @param username
+   * @returns
    */
   const createAcount = async (
     email: string,
@@ -152,22 +163,24 @@ export function Provider(props: ProviderProps) {
       console.log(email, password, username);
 
       // create the user
-      await appwrite.account.create(
-        appwrite.ID.unique(),
-        email,
-        password,
-        username
-      );
+      const signUpResp = await supabase.auth.signUp({ email, password });
+      if (signUpResp.error) throw signUpResp.error;
 
-      // create the session by logging in
-      await appwrite.account.createEmailSession(email, password);
+      const updateResp = await supabase.auth.updateUser({
+        data: { name: username },
+      });
+      if (updateResp.error) throw updateResp.error;
+      updateResp.data.user;
 
-      // get Account information for the user
-      const user = await appwrite.account.get();
-      setAuth(user);
-      return { data: user, error: undefined };
+      // set user
+      setAuth(updateResp.data.user);
+
+      // set session
+      setSession(signUpResp.data.session);
+      return { data: updateResp.data.user, error: undefined };
     } catch (error) {
       setAuth(null);
+      setSession(null);
       return { error: error as Error, data: undefined };
     }
   };

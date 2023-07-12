@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text, View } from '@/components/Themed';
-import { useAuth } from '../context/auth';
+import { useAuth } from '../context/auth-supabase';
 
 export default function TabOneScreen() {
   const { signOut, user } = useAuth();

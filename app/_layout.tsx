@@ -8,7 +8,7 @@ import { useFonts } from "expo-font";
 import { SplashScreen, Stack } from "expo-router";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
-import { Provider, useAuth } from "./context/auth";
+import { Provider, useAuth } from "./context/auth-supabase";
 
 export {
   // Catch any errors thrown by the Layout component.

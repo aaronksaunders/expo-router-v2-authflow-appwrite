@@ -5,7 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
 } from "react-native";
-import { useAuth } from "../context/auth";
+import { useAuth } from "../context/auth-supabase";
 import { Stack, useRouter } from "expo-router";
 import { useRef } from "react";
 
