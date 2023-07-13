@@ -1,8 +1,11 @@
 # expo-router-v2-authflow-appwrite
-Expo Router - File Based Routing for React Native, tabs template with auth flow using context api
+Expo Router - File Based Routing for React Native, tabs template with auth flow using context API
 
+---
+### Click Here If You Are Looking For Supabase Source Code - [SUPABASE AUTH FLOW](https://github.com/aaronksaunders/expo-router-v2-authflow-appwrite/tree/feature/supabase)
+---
 
-This is source code from the video on [Expo Router v2](https://blog.expo.dev/introducing-expo-router-v2-3850fd5c3ca1)
+This is the source code from the video on [Expo Router v2](https://blog.expo.dev/introducing-expo-router-v2-3850fd5c3ca1)
 
 In the video, I walk you through the code for an authentication flow using [Expo Router](https://docs.expo.dev/routing/introduction/) and [Appwrite](https://appwrite.io/docs/getting-started-for-web). 
 
