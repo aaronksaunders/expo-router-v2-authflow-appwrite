@@ -16,5 +16,3 @@ export const supabase = createClient(
     },
   }
 );
-
-console.log(supabase);
